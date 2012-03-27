@@ -1,0 +1,4 @@
+pmGen is an LLVM-to-Promela compiler.
+It takes LLVM bitcode which can be generated from C/C++,using llvm-gcc or clang,or any other language that can be converted into LLVM and compiles that into Promela,a formal language which can be used to check models by SPIN.
+
+pmGen is under GNU/GPL licensed.
