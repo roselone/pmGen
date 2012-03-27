@@ -1,5 +1,5 @@
-#ifndef PMGIO_H
-#define PMGIO_H
+#ifndef PMG_IO_H
+#define PMG_IO_H
 
 #include "llvm/LLVMContext.h"
 #include "llvm/Module.h"

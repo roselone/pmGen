@@ -16,7 +16,7 @@ LINK_COMPONENTS=bitreader asmparser
 # List libraries that we'll need
 # We use LIBS because sample is a dynamic library.
 #
-USEDLIBS = PMGIO.a test.a
+USEDLIBS = PMGTypeFinder.a PMGIO.a test.a
 
 #
 # Include Makefile.common so we know what to do.
