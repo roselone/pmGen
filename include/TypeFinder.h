@@ -1,6 +1,7 @@
 #ifndef PMG_TYPEFINDER_H
 #define PMG_TYPEFINDER_H
 
+#include "TypeGen.h"
 #include "llvm/Assembly/Writer.h"
 #include "llvm/Module.h"
 #include "llvm/DerivedTypes.h"
@@ -15,10 +16,10 @@ class TypeFinder {
     DenseSet<const Value*> VisitedConstants;
     DenseSet<const Type*> VisitedTypes;
 
-    TypePrinting &TP;
+    TypeGen &TP;
     std::vector<const Type*> &NumberedTypes;
   public:
-    TypeFinder(TypePrinting &tp, std::vector<const Type*> &numberedTypes)
+    TypeFinder(TypeGen &tp, std::vector<const Type*> &numberedTypes)
       : TP(tp), NumberedTypes(numberedTypes) {}
 
     void Run(const Module &M);
@@ -30,9 +31,7 @@ class TypeFinder {
     /// walked in other ways.  GlobalValues, basic blocks, instructions, and
     /// inst operands are all explicitly enumerated.
     void IncorporateValue(const Value *V);
-	void AddModuleTypesToPrinter(TypePrinting &TP,
-								 std::vector<const Type *> &NumberedTypes,
-								 const Module *M);
+	void AddModuleTypesToPrinter(TypeGen &TP,const Module *M);
 };
 
 }

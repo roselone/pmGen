@@ -32,17 +32,17 @@ int main (int argc, char ** argv)
 
 	Module::global_iterator begin=m->global_begin();
 	Module::global_iterator end=m->global_end();
-	TypePrinting TypePrinter;
+	TypeGen TypeGener;
 	std::vector<const Type*> numberedTypes;
-	TypeFinder typeFinder(TypePrinter,numberedTypes);
+	TypeFinder typeFinder(TypeGener,numberedTypes);
 	typeFinder.Run(*m);
 	for (Module::global_iterator i=begin;i!=end;i++){
 		outs()<<i->getName().str()<<' '<<i->getType()<<'\n';
-		//TypePrinter.print(i->getType()->getElementType(),outs());
+		//TypeGener.print(i->getType()->getElementType(),outs());
 		i->print(outs(),0);
 		i->getType()->getElementType()->print(outs());
 		outs()<<'\n';
-		TypePrinter.print(i->getType()->getElementType(),outs(),0);
+		TypeGener.print(i->getType()->getElementType(),outs(),0);
 		outs()<<'\n';
 	}
 
@@ -50,6 +50,15 @@ int main (int argc, char ** argv)
 	for (TypeSymbolTable::const_iterator TI=ST.begin(),E=ST.end();
 			TI!=E;++TI){
 		outs()<<TI->first<<' '<<TI->second<<'\n';
+	}
+
+	const Type *type;
+	for (int i=0,e=numberedTypes.size();i!=e;++i){
+		type=numberedTypes[i];
+		if (type->isStructTy()) {
+			TypeGener.printAtLeastOneLevel(type,outs());
+		}
+		outs()<<'\n';
 	}
 	return 0;
 }

@@ -8,6 +8,6 @@ LEVEL=..
 #
 # List all of the subdirectories that we will compile.
 #
-DIRS=IO test
+DIRS=TypeFinder IO test
 
 include $(LEVEL)/Makefile.common
