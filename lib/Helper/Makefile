@@ -8,7 +8,7 @@ LEVEL=../..
 #
 # Give the name of a library.  This will build a dynamic version.
 #
-LIBRARYNAME=PMGTypeFinder
+LIBRARYNAME=PMGHelper
 LINK_COMPONENTS=bitreader asmparser
 
 #

@@ -1,7 +1,10 @@
 #ifndef PMG_TYPEGEN_H
 #define PMG_TYPEGEN_H
 
+#include "llvm/TypeSymbolTable.h"
+
 #include <string>
+#include <vector>
 
 namespace llvm {
 
@@ -32,7 +35,9 @@ public:
 	/// one.  This name will be printed instead of the structural version of the
 	/// type in order to make the output more concise.
 	void addTypeName(const Type *Ty, const std::string &N);
-  
+	
+	void gen(std::vector<const Type*> numberedTypes, const TypeSymbolTable &ST,raw_ostream &OS);
+		
 private:
 	void CalcTypeName(const Type *Ty, SmallVectorImpl<const Type *> &TypeStack,
                     raw_ostream &OS, bool IgnoreTopLevelName = false);

@@ -1,3 +1,4 @@
+#include "Helper.h"
 #include "TypeFinder.h"
 #include "TypeGen.h"
 
@@ -9,70 +10,6 @@
 #include <cctype>
 
 using namespace llvm;
-// PrintEscapedString - Print each character of the specified string, escaping
-// it if it is not printable or if it is an escape char.
-void PrintEscapedString(StringRef Name, raw_ostream &Out) {
-	for (unsigned i = 0, e = Name.size(); i != e; ++i) {
-    unsigned char C = Name[i];
-    if (isprint(C) && C != '\\' && C != '"')
-      Out << C;
-    else
-      Out << '\\' << hexdigit(C >> 4) << hexdigit(C & 0x0F);
-	}
-}
-
-enum PrefixType {
-	GlobalPrefix,
-	LabelPrefix,
-	LocalPrefix,
-	NoPrefix
-};
-
-/// PrintLLVMName - Turn the specified name into an 'LLVM name', which is either
-/// prefixed with % (if the string only contains simple characters) or is
-/// surrounded with ""'s (if it has special chars in it).  Print it out.
-void PrintLLVMName(raw_ostream &OS, StringRef Name, PrefixType Prefix) {
-	assert(Name.data() && "Cannot get empty name!");
-	switch (Prefix) {
-		default: llvm_unreachable("Bad prefix!");
-		case NoPrefix: break;
-		case GlobalPrefix: OS << '@'; break;
-		case LabelPrefix:  break;
-		case LocalPrefix:  OS << '%'; break;
-	}
-
-	// Scan the name to see if it needs quotes first.
-	bool NeedsQuotes = isdigit(Name[0]);
-	if (!NeedsQuotes) {
-		for (unsigned i = 0, e = Name.size(); i != e; ++i) {
-			char C = Name[i];
-			if (!isalnum(C) && C != '-' && C != '.' && C != '_') {
-				NeedsQuotes = true;
-				break;
-			}
-		}
-	}
-
-	// If we didn't need any quotes, just write out the name in one blast.
-	if (!NeedsQuotes) {
-		OS << Name;
-		return;
-	}
-
-	// Okay, we need quotes.  Output the quotes and escape any scary characters as
-	// needed.
-	OS << '"';
-	PrintEscapedString(Name, OS);
-	OS << '"';
-}
-
-/// PrintLLVMName - Turn the specified name into an 'LLVM name', which is either
-/// prefixed with % (if the string only contains simple characters) or is
-/// surrounded with ""'s (if it has special chars in it).  Print it out.
-void PrintLLVMName(raw_ostream &OS, const Value *V) {
-	PrintLLVMName(OS, V->getName(),
-                isa<GlobalValue>(V) ? GlobalPrefix : LocalPrefix);
-}
 
 void TypeFinder::Run(const Module &M) {
 
@@ -185,7 +122,7 @@ void TypeFinder::AddModuleTypesToPrinter(TypeGen &TP,
 		std::string NameStr;
 		raw_string_ostream NameROS(NameStr);
 		formatted_raw_ostream NameOS(NameROS);
-		PrintLLVMName(NameOS, TI->first, LocalPrefix);
+		Helper::PrintLLVMName(NameOS, TI->first, LocalPrefix);
 		NameOS.flush();
 		TP.addTypeName(Ty, NameStr);
 	}
@@ -362,4 +299,20 @@ void TypeGen::print(const Type *Ty, raw_ostream &OS,
   // Cache type name for later use.
   if (!IgnoreTopLevelName)
     TM.insert(std::make_pair(Ty, TypeOS.str()));
+}
+
+void TypeGen::gen(std::vector<const Type*> numberedTypes,const TypeSymbolTable &ST,raw_ostream &OS){
+	const Type *type;
+	//Emit all numbered types.
+	for (int NI=0,NE=numberedTypes.size();NI!=NE;++NI){
+		type=numberedTypes[NI];
+		this->printAtLeastOneLevel(type,OS);
+		OS<<'\n';
+	}
+
+	//Print the named types.
+	for (TypeSymbolTable::const_iterator TI=ST.begin(),TE=ST.end();TI!=TE;++TI){
+		this->printAtLeastOneLevel(TI->second,OS);
+		OS<<'\n';
+	}
 }

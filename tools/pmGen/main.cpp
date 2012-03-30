@@ -1,6 +1,7 @@
 #include "test.h"
 #include "IO.h"
 #include "TypeFinder.h"
+#include "Helper.h"
 
 #include "llvm/Assembly/Writer.h"
 #include "llvm/TypeSymbolTable.h"
@@ -36,6 +37,10 @@ int main (int argc, char ** argv)
 	std::vector<const Type*> numberedTypes;
 	TypeFinder typeFinder(TypeGener,numberedTypes);
 	typeFinder.Run(*m);
+	//Helper helper;
+	//helper.test(outs(),"dsaf");
+
+/*
 	for (Module::global_iterator i=begin;i!=end;i++){
 		outs()<<i->getName().str()<<' '<<i->getType()<<'\n';
 		//TypeGener.print(i->getType()->getElementType(),outs());
@@ -53,13 +58,21 @@ int main (int argc, char ** argv)
 	}
 
 	const Type *type;
+	//Emit all numbered types.
 	for (int i=0,e=numberedTypes.size();i!=e;++i){
 		type=numberedTypes[i];
-		if (type->isStructTy()) {
-			TypeGener.printAtLeastOneLevel(type,outs());
-		}
+		TypeGener.printAtLeastOneLevel(type,outs());
 		outs()<<'\n';
 	}
+
+	//Print the named types.
+	const TypeSymbolTable &ST=m->getTypeSymbolTable();
+	for (TypeSymbolTable::const_iterator TI=ST.begin(),TE=ST.end();TI!=TE;++TI){
+		TypeGener.printAtLeastOneLevel(TI->second,outs());
+		outs()<<'\n';
+	}
+	*/
+	TypeGener.gen(numberedTypes,m->getTypeSymbolTable(),outs());
 	return 0;
 }
 
