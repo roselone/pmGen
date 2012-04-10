@@ -246,13 +246,13 @@ void TypeGen::CalcTypeName(
     OS << '*';
     break;
   }
-  case Type::ArrayTyID: {
-    const ArrayType *ATy = cast<ArrayType>(Ty);
-    OS << '[' << ATy->getNumElements() << " x ";
-    CalcTypeName(ATy->getElementType(), TypeStack, OS);
-    OS << ']';
-    break;
-  }
+		case Type::ArrayTyID: {
+			const ArrayType *ATy = cast<ArrayType>(Ty);
+			CalcTypeName(ATy->getElementType(),TypeStack,OS);
+			OS << '[' << ATy->getNumElements() << ']';
+			break;
+		}
+
   case Type::VectorTyID: {
     const VectorType *PTy = cast<VectorType>(Ty);
     OS << "<" << PTy->getNumElements() << " x ";

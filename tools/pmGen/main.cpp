@@ -2,7 +2,10 @@
 #include "IO.h"
 #include "TypeFinder.h"
 #include "Helper.h"
+#include "SlotTracker.h"
+#include "FunctionGen.h"
 
+#include "llvm/Support/FormattedStream.h"
 #include "llvm/Assembly/Writer.h"
 #include "llvm/TypeSymbolTable.h"
 /*
@@ -34,45 +37,32 @@ int main (int argc, char ** argv)
 	Module::global_iterator begin=m->global_begin();
 	Module::global_iterator end=m->global_end();
 	TypeGen TypeGener;
+	SlotTracker SlotTable(m);
+	ConStr conStr;
 	std::vector<const Type*> numberedTypes;
 	TypeFinder typeFinder(TypeGener,numberedTypes);
 	typeFinder.Run(*m);
-	//Helper helper;
-	//helper.test(outs(),"dsaf");
+	formatted_raw_ostream OS(outs());
 
-/*
-	for (Module::global_iterator i=begin;i!=end;i++){
-		outs()<<i->getName().str()<<' '<<i->getType()<<'\n';
-		//TypeGener.print(i->getType()->getElementType(),outs());
-		i->print(outs(),0);
-		i->getType()->getElementType()->print(outs());
-		outs()<<'\n';
-		TypeGener.print(i->getType()->getElementType(),outs(),0);
-		outs()<<'\n';
-	}
-
-	const TypeSymbolTable &ST=m->getTypeSymbolTable();
-	for (TypeSymbolTable::const_iterator TI=ST.begin(),E=ST.end();
-			TI!=E;++TI){
-		outs()<<TI->first<<' '<<TI->second<<'\n';
-	}
-
-	const Type *type;
-	//Emit all numbered types.
-	for (int i=0,e=numberedTypes.size();i!=e;++i){
-		type=numberedTypes[i];
-		TypeGener.printAtLeastOneLevel(type,outs());
-		outs()<<'\n';
-	}
-
-	//Print the named types.
-	const TypeSymbolTable &ST=m->getTypeSymbolTable();
-	for (TypeSymbolTable::const_iterator TI=ST.begin(),TE=ST.end();TI!=TE;++TI){
-		TypeGener.printAtLeastOneLevel(TI->second,outs());
-		outs()<<'\n';
-	}
-	*/
 	TypeGener.gen(numberedTypes,m->getTypeSymbolTable(),outs());
+	if (!m->global_empty()) outs()<<'\n';
+
+//	Helper::conStr=new std::map<StringRef,std::string>();	
+	for (Module::const_global_iterator GI=m->global_begin(),GE=m->global_end();
+			GI!=GE;++GI){
+		if (!conStr.isConStr(GI)){
+			TypeGener.print(GI->getType()->getElementType(),outs());	
+			Helper::WriteAsOperandInternal(outs(),GI,&TypeGener,&SlotTable,GI->getParent());
+			outs()<<'\n';
+		}
+		//TODO 初始化 init
+	}
+
+	FunctionGen functionGener(TypeGener,SlotTable,OS,m);
+	for (Module::const_iterator FI=m->begin(),FE=m->end();FI!=FE;++FI){
+		functionGener.printFunction(FI);
+	}
+
 	return 0;
 }
 

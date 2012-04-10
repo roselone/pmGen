@@ -1,6 +1,9 @@
 #ifndef PMG_HELPER_H
 #define PMG_HELPER_H
 
+#include <map>
+#include <string>
+
 namespace llvm {
 
 	
@@ -21,11 +24,26 @@ class User;
 class Constant;
 class MDNode;
 class StringRef;
+class GlobalVariable;
+
+class ConStr {
+	std::map<StringRef,std::string> conStr;
+
+public:
+	ConStr(){conStr.empty();}	
+	static ConStr *pConStr;
+	bool isConStr(const GlobalVariable *V);
+	bool isExist(const StringRef name);
+	std::string getString(const StringRef name);
+	ConStr *get();
+};
+
 
 class Helper {
-public:
 
+public:
 	static void test(raw_ostream &OS,StringRef Name);
+
 	static SlotTracker *createSlotTracker(const Value *V);
 
 	static const Module *getModuleFromVal(const Value *V);
@@ -60,6 +78,7 @@ public:
 	static void WriteAsOperand(
 			raw_ostream &Out,const Value *V,
 			bool PrintType,const Module *Context);
+
 
 };
 

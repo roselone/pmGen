@@ -2,6 +2,7 @@
 #include "SlotTracker.h"
 #include "TypeGen.h"
 #include "TypeFinder.h"
+#include "Define.h"
 
 #include "llvm/Assembly/Writer.h"
 #include "llvm/Module.h"
@@ -13,8 +14,6 @@
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Support/raw_ostream.h"
-
-
 
 using namespace llvm;
 
@@ -43,13 +42,20 @@ void Helper::PrintLLVMName(raw_ostream &OS, StringRef Name, PrefixType Prefix) {
 	switch (Prefix) {
 		default: llvm_unreachable("Bad prefix!");
 		case NoPrefix: break;
-		case GlobalPrefix: OS << '@'; break;
+		case GlobalPrefix: OS << '_'; break;
 		case LabelPrefix:  break;
-		case LocalPrefix:  OS << '%'; break;
+		case LocalPrefix:  break;
 	}
 
+	if (isdigit(Name[0])) OS << 'v';
+	for (unsigned i=0,e=Name.size();i!=e;++i){
+		char C=Name[i];
+		if (!isdigit(C) && (C<'A' || C>'z' || (C>'Z' && C<'a'))){
+			OS<<'_';
+		}else OS<<C;
+	}
 	// Scan the name to see if it needs quotes first.
-	bool NeedsQuotes = isdigit(Name[0]);
+/*	bool NeedsQuotes = isdigit(Name[0]);
 	if (!NeedsQuotes) {
 		for (unsigned i = 0, e = Name.size(); i != e; ++i) {
 			char C = Name[i];
@@ -59,18 +65,18 @@ void Helper::PrintLLVMName(raw_ostream &OS, StringRef Name, PrefixType Prefix) {
 			}
 		}
 	}
-
+*/
 	// If we didn't need any quotes, just write out the name in one blast.
-	if (!NeedsQuotes) {
-		OS << Name;
-		return;
-	}
+//	if (!NeedsQuotes) {
+//		OS << Name;
+//		return;
+//	}
 
 	// Okay, we need quotes.  Output the quotes and escape any scary characters as
 	// needed.
-	OS << '"';
-	PrintEscapedString(Name, OS);
-	OS << '"';
+//	OS << '"';
+//	PrintEscapedString(Name, OS);
+//	OS << '"';
 }
 
 /// PrintLLVMName - Turn the specified name into an 'LLVM name', which is either
@@ -134,31 +140,31 @@ const char *Helper::getPredicateText(unsigned predicate) {
   const char * pred = "unknown";
   switch (predicate) {
   case FCmpInst::FCMP_FALSE: pred = "false"; break;
-  case FCmpInst::FCMP_OEQ:   pred = "oeq"; break;
-  case FCmpInst::FCMP_OGT:   pred = "ogt"; break;
-  case FCmpInst::FCMP_OGE:   pred = "oge"; break;
-  case FCmpInst::FCMP_OLT:   pred = "olt"; break;
-  case FCmpInst::FCMP_OLE:   pred = "ole"; break;
-  case FCmpInst::FCMP_ONE:   pred = "one"; break;
+  case FCmpInst::FCMP_OEQ:   pred = "=="; break;
+  case FCmpInst::FCMP_OGT:   pred = ">"; break;
+  case FCmpInst::FCMP_OGE:   pred = ">="; break;
+  case FCmpInst::FCMP_OLT:   pred = "<"; break;
+  case FCmpInst::FCMP_OLE:   pred = "<="; break;
+  case FCmpInst::FCMP_ONE:   pred = "!="; break;
   case FCmpInst::FCMP_ORD:   pred = "ord"; break;
   case FCmpInst::FCMP_UNO:   pred = "uno"; break;
-  case FCmpInst::FCMP_UEQ:   pred = "ueq"; break;
-  case FCmpInst::FCMP_UGT:   pred = "ugt"; break;
-  case FCmpInst::FCMP_UGE:   pred = "uge"; break;
-  case FCmpInst::FCMP_ULT:   pred = "ult"; break;
-  case FCmpInst::FCMP_ULE:   pred = "ule"; break;
-  case FCmpInst::FCMP_UNE:   pred = "une"; break;
+  case FCmpInst::FCMP_UEQ:   pred = "=="; break;
+  case FCmpInst::FCMP_UGT:   pred = ">"; break;
+  case FCmpInst::FCMP_UGE:   pred = ">="; break;
+  case FCmpInst::FCMP_ULT:   pred = "<"; break;
+  case FCmpInst::FCMP_ULE:   pred = "<="; break;
+  case FCmpInst::FCMP_UNE:   pred = "!="; break;
   case FCmpInst::FCMP_TRUE:  pred = "true"; break;
-  case ICmpInst::ICMP_EQ:    pred = "eq"; break;
-  case ICmpInst::ICMP_NE:    pred = "ne"; break;
-  case ICmpInst::ICMP_SGT:   pred = "sgt"; break;
-  case ICmpInst::ICMP_SGE:   pred = "sge"; break;
-  case ICmpInst::ICMP_SLT:   pred = "slt"; break;
-  case ICmpInst::ICMP_SLE:   pred = "sle"; break;
-  case ICmpInst::ICMP_UGT:   pred = "ugt"; break;
-  case ICmpInst::ICMP_UGE:   pred = "uge"; break;
-  case ICmpInst::ICMP_ULT:   pred = "ult"; break;
-  case ICmpInst::ICMP_ULE:   pred = "ule"; break;
+  case ICmpInst::ICMP_EQ:    pred = "=="; break;
+  case ICmpInst::ICMP_NE:    pred = "!="; break;
+  case ICmpInst::ICMP_SGT:   pred = ">"; break;
+  case ICmpInst::ICMP_SGE:   pred = ">="; break;
+  case ICmpInst::ICMP_SLT:   pred = "<"; break;
+  case ICmpInst::ICMP_SLE:   pred = "<="; break;
+  case ICmpInst::ICMP_UGT:   pred = ">"; break;
+  case ICmpInst::ICMP_UGE:   pred = ">="; break;
+  case ICmpInst::ICMP_ULT:   pred = "<"; break;
+  case ICmpInst::ICMP_ULE:   pred = "<="; break;
   }
   return pred;
 }
@@ -400,10 +406,60 @@ void Helper::WriteConstantInternal(raw_ostream &Out, const Constant *CV,
   }
 
   if (const ConstantExpr *CE = dyn_cast<ConstantExpr>(CV)) {
-    Out << CE->getOpcodeName();
-    WriteOptimizationInfo(Out, CE);
-    if (CE->isCompare())
-      Out << ' ' << getPredicateText(CE->getPredicate());
+    //Out << CE->getOpcodeName();
+	Out << ' ';
+    //WriteOptimizationInfo(Out, CE);
+    //if (CE->isCompare())
+    //  Out << ' ' << getPredicateText(CE->getPredicate());
+	switch (CE->getOpcode()){
+		case GetElementPtr:
+			ConStr conStr;
+			User::const_op_iterator OI=CE->op_begin();
+			User::const_op_iterator OE=CE->op_end();
+			bool isStruct=false;
+			if (conStr.isExist(dyn_cast<Value>(*OI)->getName())){
+				Out<<'"';
+				std::string name=conStr.getString(dyn_cast<Value>(*OI)->getName());
+				Helper::PrintEscapedString(name,Out);
+				Out<<'"'<<' ';
+				return ;
+			}
+			if (cast<PointerType>((*OI)->getType())->getElementType()->getTypeID()==Type::StructTyID) isStruct=true;
+			WriteAsOperandInternal(Out,*OI,&TypePrinter,Machine,Context);
+			const Type *type=cast<PointerType>((*OI)->getType())->getElementType();
+			OI++;
+			if (isStruct){
+				if (dyn_cast<ConstantInt>(*OI)->getZExtValue()!=0){
+					Out <<'[';
+					WriteAsOperandInternal(Out,*OI,&TypePrinter,Machine,Context);
+					Out <<']';
+				}
+			}else{
+//				Out<<'[';
+//				WriteAsOperandInternal(Out,*OI,&TypePrinter,Machine,Context);
+//				Out<<']';
+			}
+			if (OI==OE) return ;
+			for (++OI;OI!=OE;++OI){
+				if (isStruct){
+					const StructType *STY=cast<StructType>(type);
+					unsigned num=dyn_cast<ConstantInt>(*OI)->getZExtValue();
+					type=STY->getElementType(num);
+					if (type->getTypeID()!=Type::StructTyID) isStruct=false;
+					Out<<".u"<<num;				
+				}else{
+					const ArrayType *ATY = cast<ArrayType>(type);
+					type=ATY->getElementType();
+					if (type->getTypeID()==Type::StructTyID) isStruct=true;
+					Out<<'[';
+					WriteAsOperandInternal(Out,*OI,&TypePrinter,Machine,Context);
+					Out<<']';
+				}
+			}
+
+			return;
+	}
+	Out << CE->getOpcodeName();
     Out << " (";
 
     for (User::const_op_iterator OI=CE->op_begin(); OI != CE->op_end(); ++OI) {
@@ -523,12 +579,12 @@ void Helper::WriteAsOperandInternal(raw_ostream &Out, const Value *V,
     return;
   }
 
-  char Prefix = '%';
+  char Prefix = 'v';
   int Slot;
   if (Machine) {
     if (const GlobalValue *GV = dyn_cast<GlobalValue>(V)) {
       Slot = Machine->getGlobalSlot(GV);
-      Prefix = '@';
+      Prefix = '_';
     } else {
       Slot = Machine->getLocalSlot(V);
     }
@@ -579,6 +635,31 @@ void Helper::WriteAsOperand(raw_ostream &Out, const Value *V,
   WriteAsOperandInternal(Out, V, &TypePrinter, 0, Context);
 }
 
+ConStr *ConStr::pConStr=new ConStr();
+
+bool ConStr::isConStr(const GlobalVariable *V){
+	if (V->hasInitializer()){
+		const ConstantArray *CA=dyn_cast<ConstantArray>(V->getInitializer());
+		if (CA && CA->isString()){
+			get()->conStr.insert(std::pair<StringRef,std::string>(V->getName(),CA->getAsString()));
+			return true;
+		}
+	}
+	return false;
+}
+
+bool ConStr::isExist(const StringRef name){
+	if (get()->conStr.find(name)!=get()->conStr.end()) return true;
+	else return false;
+}
+
+std::string ConStr::getString(const StringRef name){
+	return get()->conStr.find(name)->second;
+}
+
+ConStr *ConStr::get(){
+	return ConStr::pConStr;
+}
 
 // Module level constructor. Causes the contents of the Module (sans functions)
 // to be added to the slot table.
