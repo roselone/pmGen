@@ -24,6 +24,7 @@ class FunctionGen {
 	const Module *TheModule;
 	std::map<StringRef,int> gos;
 	int count;
+	int retCount;
 	bool flag;
 public:
 	FunctionGen(TypeGen &TG,SlotTracker &ST,formatted_raw_ostream &OS,const Module *M):TypeGener(TG),Machine(ST),Out(OS),TheModule(M){}

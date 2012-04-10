@@ -226,10 +226,13 @@ void TypeGen::CalcTypeName(
 			OS << "TYPEDEF ";
 			CalcTypeName(Ty,TypeStack,OS);
 			OS << " {";
+			int i=0;
 			for (StructType::element_iterator I = STy->element_begin(),
 					E = STy->element_end(); I != E; ++I) {
 				OS << ' ';
 				CalcTypeName(*I, TypeStack, OS);
+				OS << " u"<<i;
+				i++;
 				if (llvm::next(I) == STy->element_end())
 				OS << ' ';
 				else

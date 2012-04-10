@@ -23,6 +23,8 @@ int main (int argc, char ** argv)
 {
 	LLVMContext Context;
 	std::string InputFileName;
+	std::string InitProc;
+	raw_string_ostream initProc(InitProc);
 	if (argc>1){
 		InputFileName=argv[1];
 	}
@@ -46,14 +48,17 @@ int main (int argc, char ** argv)
 
 	TypeGener.gen(numberedTypes,m->getTypeSymbolTable(),outs());
 	if (!m->global_empty()) outs()<<'\n';
-
+	Helper::InitBE(initProc,true);
 //	Helper::conStr=new std::map<StringRef,std::string>();	
 	for (Module::const_global_iterator GI=m->global_begin(),GE=m->global_end();
 			GI!=GE;++GI){
 		if (!conStr.isConStr(GI)){
-			TypeGener.print(GI->getType()->getElementType(),outs());	
+			TypeGener.print(GI->getType()->getElementType(),outs());
+			outs()<<' ';	
 			Helper::WriteAsOperandInternal(outs(),GI,&TypeGener,&SlotTable,GI->getParent());
-			outs()<<'\n';
+			outs()<<";\n";
+			if (GI->hasInitializer())
+				Helper::InitGValue(initProc,GI,&TypeGener,&SlotTable,GI->getParent());
 		}
 		//TODO 初始化 init
 	}
@@ -62,7 +67,8 @@ int main (int argc, char ** argv)
 	for (Module::const_iterator FI=m->begin(),FE=m->end();FI!=FE;++FI){
 		functionGener.printFunction(FI);
 	}
-
+	Helper::InitBE(initProc,false);
+	outs()<<initProc.str();
 	return 0;
 }
 

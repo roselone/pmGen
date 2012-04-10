@@ -635,6 +635,42 @@ void Helper::WriteAsOperand(raw_ostream &Out, const Value *V,
   WriteAsOperandInternal(Out, V, &TypePrinter, 0, Context);
 }
 
+void Helper::InitBE(raw_ostream &Out,bool BorE){
+	if (BorE){
+		Out<<"init {\n";
+	}else Out << "run _main();\n}\n";
+	return ;
+}
+
+void Helper::InitGValue(raw_ostream &Out,const GlobalVariable *GV,TypeGen *TypePrinter,
+		SlotTracker *Machine,const Module *Context){
+	const Value *ini=GV->getInitializer();
+	const Constant *CV=dyn_cast<Constant>(ini);
+	std::string name=GV->getName();
+	name="_"+name;
+
+	if (const ConstantInt *CI=dyn_cast<ConstantInt>(CV)){
+		Out<<name<<" = "<<CI->getValue();
+		Out << ";\n";
+	}else if (const ConstantArray *CA=dyn_cast<ConstantArray>(CV)){
+		for (unsigned i=0,e=CA->getNumOperands();i!=e;++i){
+			const ConstantInt *T=dyn_cast<ConstantInt>(CA->getOperand(i));
+			if (T){
+				Out <<name<<'['<<i<<']'<<'='<<T->getValue();
+				Out << ";\n";
+			}
+		}
+	}else if (const ConstantStruct *CS=dyn_cast<ConstantStruct>(CV)){
+		for (unsigned i=0,e=CS->getNumOperands();i!=e;++i){
+			const ConstantInt *T=dyn_cast<ConstantInt>(CS->getOperand(i));
+			if (T){
+				Out <<name<<".u"<<i<<'='<<T->getValue();
+				Out << ";\n";
+			}
+		}
+	}
+}
+
 ConStr *ConStr::pConStr=new ConStr();
 
 bool ConStr::isConStr(const GlobalVariable *V){

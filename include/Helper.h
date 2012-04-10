@@ -79,6 +79,13 @@ public:
 			raw_ostream &Out,const Value *V,
 			bool PrintType,const Module *Context);
 
+	static void InitBE(raw_ostream &Out,bool BorE);
+
+	static void InitGValue(
+			raw_ostream &Out,const GlobalVariable *GV,
+			TypeGen *TypePrinter,
+			SlotTracker *Machine,
+			const Module *Context);
 
 };
 
