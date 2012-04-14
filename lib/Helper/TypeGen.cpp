@@ -63,7 +63,7 @@ void TypeFinder::IncorporateType(const Type *Ty) {
     // If this is a structure or opaque type, add a name for the type.
     if (((Ty->isStructTy() && cast<StructType>(Ty)->getNumElements())
         || Ty->isOpaqueTy()) && !TP.hasTypeName(Ty)) {
-		TP.addTypeName(Ty, "%"+utostr(unsigned(NumberedTypes.size())));
+		TP.addTypeName(Ty, "n_"+utostr(unsigned(NumberedTypes.size())));
 		NumberedTypes.push_back(Ty);
     }
 
@@ -244,9 +244,9 @@ void TypeGen::CalcTypeName(
   case Type::PointerTyID: {
     const PointerType *PTy = cast<PointerType>(Ty);
     CalcTypeName(PTy->getElementType(), TypeStack, OS);
-    if (unsigned AddressSpace = PTy->getAddressSpace())
-      OS << " addrspace(" << AddressSpace << ')';
-    OS << '*';
+  //  if (unsigned AddressSpace = PTy->getAddressSpace())
+  //    OS << " addrspace(" << AddressSpace << ')';
+  //  OS << '*';
     break;
   }
 		case Type::ArrayTyID: {

@@ -47,10 +47,10 @@ void Helper::PrintLLVMName(raw_ostream &OS, StringRef Name, PrefixType Prefix) {
 		case LocalPrefix:  break;
 	}
 
-	if (isdigit(Name[0])) OS << 'v';
+	if (Name[0]>='0' && Name[0]<='9') OS << 'v';
 	for (unsigned i=0,e=Name.size();i!=e;++i){
 		char C=Name[i];
-		if (!isdigit(C) && (C<'A' || C>'z' || (C>'Z' && C<'a'))){
+		if (!(C>='0' && C<='9') && !(C>='A' && C<='Z') && !(C>='a' && C<='z')){
 			OS<<'_';
 		}else OS<<C;
 	}
