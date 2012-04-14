@@ -637,8 +637,8 @@ void Helper::WriteAsOperand(raw_ostream &Out, const Value *V,
 
 void Helper::InitBE(raw_ostream &Out,bool BorE){
 	if (BorE){
-		Out<<"init {\n";
-	}else Out << "  run _main();\n}\n";
+		Out<<"init {\nchan _syn = [0] of { int };\n";
+	}else Out << "  run _main(_syn);\n}\n";
 	return ;
 }
 

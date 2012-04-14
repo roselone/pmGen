@@ -473,25 +473,35 @@ flag1:
     // and if the return type is not a pointer to a function.
     //
 	std::string name2=Operand->getName();
+
+	if (name2=="pthread_create"){
+		writeParamOperand(CI->getArgOperand(2),NULL);
+		Out<<'(';
+		writeParamOperand(CI->getArgOperand(3),NULL);
+		Out<<", "<<"_return"<<retCount<<");\n";
+		retCount++;
+		return ;
+	}
+
 	if (name2=="printf"){
 		Out<<' '<<name2;
 	}else{
-    Out << ' ';
-    if (!FTy->isVarArg() &&
-        (!RetTy->isPointerTy() ||
-         !cast<PointerType>(RetTy)->getElementType()->isFunctionTy())) {
-     // TypeGener.print(RetTy, Out);
-     // Out << ' ';
-      writeOperand(Operand, false);
-    } else {
-      writeOperand(Operand, false);
-    }
+		Out << ' ';
+		if (!FTy->isVarArg() &&
+			(!RetTy->isPointerTy() ||
+			!cast<PointerType>(RetTy)->getElementType()->isFunctionTy())) {
+			//TypeGener.print(RetTy, Out);
+			// Out << ' ';
+			writeOperand(Operand, false);
+		} else {
+			writeOperand(Operand, false);
+		}
 	}
     Out << '(';
     for (unsigned op = 0, Eop = CI->getNumArgOperands(); op < Eop; ++op) {
       if (op > 0)
         Out << ", ";
-	  writeParamOperand(CI->getArgOperand(op), PAL.getParamAttributes(op + 1));
+		writeParamOperand(CI->getArgOperand(op), PAL.getParamAttributes(op + 1));
     }
 	if (name2!="printf"){
 		Out<<", ";
