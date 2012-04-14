@@ -293,7 +293,8 @@ void FunctionGen::printInfoComment(const Value &V) {
 // This member is called for each Instruction in a function..
 void FunctionGen::printInstruction(const Instruction &I) {
   //if (AnnotationWriter) AnnotationWriter->emitInstructionAnnot(&I, Out);
-
+	if (isa<AllocaInst>(I)) return;
+	Out << "  ";
 	std::string name;
 	if (I.hasName()){
 		name=I.getName().str();
@@ -314,30 +315,29 @@ void FunctionGen::printInstruction(const Instruction &I) {
 		Out << "if\n";
 
 		for (unsigned op = 0, Eop = I.getNumOperands(); op < Eop; op += 2) {
-			Out << "::";
+			Out << "    ::";
 			Out <<"(currentLabel == ";
 			Out<<gos.find(I.getOperand(op+1)->getName())->second<<")->";
 			Out<<name<<" = ";
 			writeOperand(I.getOperand(op),false);
 			Out<<"\n";
 		}
-		Out<<"fi\n";
+		Out<<"  fi\n";
 		return ;
 	}
 	if (!flag){
-		Out<<"currentLabel = "<<gos.find(I.getParent()->getName())->second<<'\n';
+		Out<<"currentLabel = "<<gos.find(I.getParent()->getName())->second<<";\n  ";
 		flag=true;
 	}
 
-	if (isa<AllocaInst>(I)) return;
   // Print out indentation for an instruction.
-  Out << "  ";
+  
 	if (const CallInst *CI = dyn_cast<CallInst>(&I)) {
 	//	if (CI->getCalledValue()->getName()=="printf")
 	Out <<"run ";
 			goto flag1;
 	}
-  if (I.hasName() || !I.getType()->isVoidTy())
+	if (I.hasName() || !I.getType()->isVoidTy())
 	Out <<name<<" = ";
 flag1:
   // Print out name if it exists...
@@ -378,17 +378,17 @@ flag1:
   // Special case conditional branches to swizzle the condition out to the front
   if (isa<BranchInst>(I) && cast<BranchInst>(I).isConditional()) {
     BranchInst &BI(cast<BranchInst>(I));
-    Out << "if\n::(";
+    Out << "if\n    ::(";
     writeOperand(BI.getCondition(), false);
     Out << "!= 0) -> goto Label";
 	Out << gos.find(BI.getSuccessor(0)->getName())->second;
     //writeOperand(BI.getSuccessor(0), false);
-    Out << "\n::(";
+    Out << "\n    ::(";
 	writeOperand(BI.getCondition(), false);
 	Out << "==0) -> goto Label";
 	Out << gos.find(BI.getSuccessor(1)->getName())->second;
     //writeOperand(BI.getSuccessor(1), false);
-	Out << "\nfi";
+	Out << "\n  fi";
 
   } else if (isa<SwitchInst>(I)) {
     // Special case switch instruction to get formatting nice and correct.
@@ -502,9 +502,9 @@ flag1:
     Out << ')';
 	if (name2!="printf") {
 		if (RetTy->isVoidTy()){
-			Out << "\n_syn?0;";
+			Out << ";\n  _syn?0";
 		}else{
-			Out << "\n_return"<<retCount<<"?"<<name<<';';
+			Out << ";\n  _return"<<retCount<<"?"<<name;
 			retCount++;
 		}
 	}
@@ -617,7 +617,7 @@ flag1:
       TypeGener.print(TheType, Out);
     }
 */
-	Out << ' ';
+	
 	if (isa<SelectInst>(I)){
 		Out << '(';
 		writeOperand(I.getOperand(0),false);
@@ -662,7 +662,7 @@ flag1:
 	}else if (isa<ReturnInst>(I)){
 		Out <<"__return!";
 		writeOperand(I.getOperand(0),false);
-		Out << "\ngoto LabelSkip;";
+		Out << "\n  goto LabelSkip;";
 	}else{
 		for (unsigned i = 0, E = I.getNumOperands(); i != E; ++i) {
 			if (i) Out << ",[other] ";
@@ -670,7 +670,7 @@ flag1:
 		}	
 	}
   }
-	Out << '\n';
+	Out << ";\n";
   // Print post operand alignment for load/store.
 /*
   if (isa<LoadInst>(I) && cast<LoadInst>(I).getAlignment()) {
