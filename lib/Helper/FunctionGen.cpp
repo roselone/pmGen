@@ -105,7 +105,7 @@ void FunctionGen::printFunction(const Function *F) {
         Out << ' ' << Attribute::getAsString(ArgAttrs);
     }
   }
-  if (FT->getNumParams()>0) Out <<", ";
+  if (FT->getNumParams()>0) Out <<"; ";
   if (returnType->isVoidTy()){
 	Out <<"chan __syn";
   }else{
@@ -179,9 +179,9 @@ void FunctionGen::printFunction(const Function *F) {
 		printBasicBlock(I);
 	}
 	if (returnType->isVoidTy())
-		Out <<"__syn!0\n";
+		Out <<"__syn!0;\n";
 
-	Out<<"LableSkip:skip\n";
+	Out<<"LabelSkip:skip\n";
 
     Out << "}\n";
   }
@@ -224,7 +224,7 @@ void FunctionGen::printBasicBlock(const BasicBlock *BB) {
     else
       Out << "<badref>";
   }
-
+/*
   if (BB->getParent() == 0) {
     Out.PadToColumn(50);
     Out << "; Error: Block without parent!";
@@ -245,7 +245,7 @@ void FunctionGen::printBasicBlock(const BasicBlock *BB) {
       }
     }
   }
-
+*/
   Out << "\n";
 
   //if (AnnotationWriter) AnnotationWriter->emitBasicBlockStartAnnot(BB, Out);
@@ -298,7 +298,8 @@ void FunctionGen::printInstruction(const Instruction &I) {
 	std::string name;
 	if (I.hasName()){
 		name=I.getName().str();
-		if (name[0]=='.') name[0]='_';
+		for (int k=0;k<name.size();k++)
+			if (name[k]=='.') name[k]='_';
 	}else if(!I.getType()->isVoidTy()){
 		int SlotNum=Machine.getLocalSlot(&I);
 		if (SlotNum==-1){
@@ -322,7 +323,7 @@ void FunctionGen::printInstruction(const Instruction &I) {
 			writeOperand(I.getOperand(op),false);
 			Out<<"\n";
 		}
-		Out<<"  fi\n";
+		Out<<"  fi;\n";
 		return ;
 	}
 	if (!flag){
@@ -333,9 +334,9 @@ void FunctionGen::printInstruction(const Instruction &I) {
   // Print out indentation for an instruction.
   
 	if (const CallInst *CI = dyn_cast<CallInst>(&I)) {
-	//	if (CI->getCalledValue()->getName()=="printf")
-	Out <<"run ";
-			goto flag1;
+		if (CI->getCalledValue()->getName()!="printf")
+			Out <<"run ";
+		goto flag1;
 	}
 	if (I.hasName() || !I.getType()->isVoidTy())
 	Out <<name<<" = ";
@@ -376,20 +377,24 @@ flag1:
   const Value *Operand = I.getNumOperands() ? I.getOperand(0) : 0;
 
   // Special case conditional branches to swizzle the condition out to the front
-  if (isa<BranchInst>(I) && cast<BranchInst>(I).isConditional()) {
-    BranchInst &BI(cast<BranchInst>(I));
-    Out << "if\n    ::(";
-    writeOperand(BI.getCondition(), false);
-    Out << "!= 0) -> goto Label";
-	Out << gos.find(BI.getSuccessor(0)->getName())->second;
-    //writeOperand(BI.getSuccessor(0), false);
-    Out << "\n    ::(";
-	writeOperand(BI.getCondition(), false);
-	Out << "==0) -> goto Label";
-	Out << gos.find(BI.getSuccessor(1)->getName())->second;
-    //writeOperand(BI.getSuccessor(1), false);
-	Out << "\n  fi";
-
+  if (isa<BranchInst>(I)) {
+	  if (cast<BranchInst>(I).isConditional()){
+		BranchInst &BI(cast<BranchInst>(I));
+		Out << "if\n    ::(";
+		writeOperand(BI.getCondition(), false);
+		Out << "!= 0) -> goto Label";
+		Out << gos.find(BI.getSuccessor(0)->getName())->second;
+		//writeOperand(BI.getSuccessor(0), false);
+		Out << "\n    ::(";
+		writeOperand(BI.getCondition(), false);
+		Out << "==0) -> goto Label";
+		Out << gos.find(BI.getSuccessor(1)->getName())->second;
+		//writeOperand(BI.getSuccessor(1), false);
+		Out << "\n  fi";
+	  }else{
+		  BranchInst &BI(cast<BranchInst>(I));
+		  Out <<"goto Label"<<gos.find(BI.getSuccessor(0)->getName())->second;
+	  }
   } else if (isa<SwitchInst>(I)) {
     // Special case switch instruction to get formatting nice and correct.
     Out << ' ';
@@ -440,7 +445,7 @@ flag1:
     for (const unsigned *i = IVI->idx_begin(), *e = IVI->idx_end(); i != e; ++i)
       Out << ", " << *i;
   } else if (isa<ReturnInst>(I) && !Operand) {
-    Out << " void";
+    return;
   } else if (const CallInst *CI = dyn_cast<CallInst>(&I)) {
     // Print the calling convention being used.
     switch (CI->getCallingConv()) {
@@ -672,7 +677,7 @@ flag1:
 	}else if (isa<ReturnInst>(I)){
 		Out <<"__return!";
 		writeOperand(I.getOperand(0),false);
-		Out << "\n  goto LabelSkip;";
+		Out << ";\n  goto LabelSkip";
 	}else{
 		for (unsigned i = 0, E = I.getNumOperands(); i != E; ++i) {
 			if (i) Out << ",[other] ";
