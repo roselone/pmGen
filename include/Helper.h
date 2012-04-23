@@ -86,7 +86,8 @@ public:
 			TypeGen *TypePrinter,
 			SlotTracker *Machine,
 			const Module *Context);
-
+	
+	static void Formatting(std::string &s);
 };
 
 }

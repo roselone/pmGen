@@ -24,7 +24,9 @@ int main (int argc, char ** argv)
 	LLVMContext Context;
 	std::string InputFileName;
 	std::string InitProc;
+	std::string GVTmp;
 	raw_string_ostream initProc(InitProc);
+	raw_string_ostream gvTmp(GVTmp);
 	if (argc>1){
 		InputFileName=argv[1];
 	}
@@ -53,12 +55,16 @@ int main (int argc, char ** argv)
 	for (Module::const_global_iterator GI=m->global_begin(),GE=m->global_end();
 			GI!=GE;++GI){
 		if (!conStr.isConStr(GI)){
-			TypeGener.print(GI->getType()->getElementType(),outs());
-			outs()<<' ';	
-			Helper::WriteAsOperandInternal(outs(),GI,&TypeGener,&SlotTable,GI->getParent());
-			outs()<<";\n";
+			GVTmp.clear();
+			TypeGener.print(GI->getType()->getElementType(),gvTmp);
+			gvTmp<<' ';	
+			Helper::WriteAsOperandInternal(gvTmp,GI,&TypeGener,&SlotTable,GI->getParent());
+			gvTmp<<";\n";
+			gvTmp.flush();
+			Helper::Formatting(GVTmp);
 			if (GI->hasInitializer())
 				Helper::InitGValue(initProc,GI,&TypeGener,&SlotTable,GI->getParent());
+			outs()<<GVTmp;
 		}
 		//TODO 初始化 init
 	}

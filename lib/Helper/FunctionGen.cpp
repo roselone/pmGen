@@ -261,21 +261,27 @@ void FunctionGen::printBasicBlock(const BasicBlock *BB) {
 }
 
 void FunctionGen::localValueDeclare(const Instruction &I){
+	std::string LVTmp;
+	raw_string_ostream lvTmp(LVTmp);
 	if (!I.getType()->isVoidTy()){
-		TypeGener.print(I.getType(),Out);
-		Out << ' ';
+		LVTmp.clear();
+		TypeGener.print(I.getType(),lvTmp);
+		lvTmp << ' ';
 		if (I.hasName()) {
 			//Out <<I.getName();
-			Helper::PrintLLVMName(Out, &I);
+			Helper::PrintLLVMName(lvTmp, &I);
 		} else if (!I.getType()->isVoidTy()) {
 			// Print out the def slot taken.
 			int SlotNum = Machine.getLocalSlot(&I);
 			if (SlotNum == -1)
-			Out << "<badref>";
+			lvTmp << "<badref>";
 		else
-			Out << 'v' << SlotNum;
+			lvTmp << 'v' << SlotNum;
 		}	
-		Out<<";\n";	
+		lvTmp<<";\n";	
+		lvTmp.flush();
+		Helper::Formatting(LVTmp);
+		Out << LVTmp;
 	}
 }
 
@@ -296,6 +302,7 @@ void FunctionGen::printInstruction(const Instruction &I) {
 	if (isa<AllocaInst>(I)) return;
 	Out << "  ";
 	std::string name;
+	std::string name2;
 	if (I.hasName()){
 		name=I.getName().str();
 		for (int k=0;k<name.size();k++)
@@ -477,7 +484,7 @@ flag1:
     // only do this if the first argument is a pointer to a nonvararg function,
     // and if the return type is not a pointer to a function.
     //
-	std::string name2=Operand->getName();
+	name2=Operand->getName();
 
 	if (name2=="pthread_create"){
 		writeParamOperand(CI->getArgOperand(2),NULL);

@@ -197,8 +197,8 @@ void TypeGen::CalcTypeName(
 			unsigned bitWidth=cast<IntegerType>(Ty)->getBitWidth();
 			switch (bitWidth){
 				case 1:			  OS << "bit";  break;
-				case 8:			  OS << "byte"; break;
-				case 16:		  OS << "short";break;
+				case 8:			  OS << "int";  break;
+				case 16:		  OS << "int";  break;
 				case 32:		  OS << "int";  break;
 				default:						break;
 			}

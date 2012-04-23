@@ -672,6 +672,23 @@ void Helper::InitGValue(raw_ostream &Out,const GlobalVariable *GV,TypeGen *TypeP
 	}
 }
 
+void Helper::Formatting(std::string &s){
+	int i,st,ed;
+	std::string tmp=s;
+	bool flag=true;
+	if (s.size()==0) return ;
+	for (i=0;i<s.size();i++){
+		if (s[i]=='[') { st=i;flag=false; }
+		if (s[i]==']') { ed=i; }
+	}
+	if (flag) return ;
+	int j=0;
+	for (i=0;i<st;i++)	s[j++]=tmp[i];
+	for (i=ed+1;i<s.size()-2;i++) s[j++]=tmp[i];
+	for (i=st;i<=ed;i++) s[j++]=tmp[i];
+	return ;
+}
+
 ConStr *ConStr::pConStr=new ConStr();
 
 bool ConStr::isConStr(const GlobalVariable *V){
