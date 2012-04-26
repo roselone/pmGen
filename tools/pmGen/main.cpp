@@ -8,15 +8,7 @@
 #include "llvm/Support/FormattedStream.h"
 #include "llvm/Assembly/Writer.h"
 #include "llvm/TypeSymbolTable.h"
-/*
-#include "llvm/DerivedTypes.h"
-#include "llvm/Support/FormattedStream.h"
-#include "llvm/ADT/StringExtras.h"
-#include "llvm/Support/ErrorHandling.h"
-#include <cctype>
 
-#include "llvm/ADT/DenseSet.h"
-*/
 using namespace llvm;
 
 int main (int argc, char ** argv)
@@ -36,7 +28,7 @@ int main (int argc, char ** argv)
 	}
 
 	Module *m=parseModule(InputFileName,Context);
-	outs()<<*m<<"\n-----------------------\n\n";
+//	outs()<<*m<<"\n-----------------------\n\n";
 
 	Module::global_iterator begin=m->global_begin();
 	Module::global_iterator end=m->global_end();
@@ -51,7 +43,6 @@ int main (int argc, char ** argv)
 	TypeGener.gen(numberedTypes,m->getTypeSymbolTable(),outs());
 	if (!m->global_empty()) outs()<<'\n';
 	Helper::InitBE(initProc,true);
-//	Helper::conStr=new std::map<StringRef,std::string>();	
 	for (Module::const_global_iterator GI=m->global_begin(),GE=m->global_end();
 			GI!=GE;++GI){
 		if (!conStr.isConStr(GI)){
@@ -66,7 +57,6 @@ int main (int argc, char ** argv)
 				Helper::InitGValue(initProc,GI,&TypeGener,&SlotTable,GI->getParent());
 			outs()<<GVTmp;
 		}
-		//TODO 初始化 init
 	}
 
 	FunctionGen functionGener(TypeGener,SlotTable,OS,m);
